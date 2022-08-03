@@ -4,11 +4,12 @@
 	
 	If you going to use
 	this addon in your
-	server please add
-	  your workshop
+	server please don't
+	 reupload and add
+	 to your workshop
 	   collection.
 
-	  Thx for using...
+	 Thanks for using!
 ]]--
 
 PI_HOLO:ClearConfig()

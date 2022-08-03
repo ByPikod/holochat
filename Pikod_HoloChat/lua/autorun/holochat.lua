@@ -50,10 +50,10 @@ function system:AddModule(command, module)
 	module.Display.TextFormat = (module.Display.TextFormat or "%1%")
 
 	module.TimeForAnimation = {}
-	module.TimeForAnimation["fadeIn"] = module.DisplayLength / 6 -- 1/6 for fade in
+	module.TimeForAnimation["fadeIn"] = module.DisplayLength / 12 -- x/12 for fade in
 	module.TimeForAnimation["fadeOut"] = module.DisplayLength / 6 -- 1/6 for fade out
-	module.TimeForAnimation["slideOut"] = module.DisplayLength / 8 -- 1/20 for slide
-	
+	module.TimeForAnimation["slideOut"] = module.DisplayLength / 8 -- x/8 for slide
+
 	-- Insertion
 	self.modules[command] = module
 end
@@ -134,8 +134,8 @@ if SERVER then
 
 		for key, value in pairs(system.modules) do
 			
-			local commandString = system.properties["prefix"]..key
-			if not (string.sub(text, 0, string.len(commandString)) == commandString) then continue end -- continue to loop if command not matches
+			local commandString = system.properties["prefix"]..key.." "
+			if string.sub(text, 0, string.len(commandString)) ~= commandString then continue end -- continue to loop if command not matches
 
 			-- Command matches
 			if system.cooldowns[ply] and system.cooldowns[ply] > CurTime() then -- check is player in cooldown
@@ -147,7 +147,7 @@ if SERVER then
 
 			system.cooldowns[ply] = CurTime() + system.properties["cooldown"] -- set cooldown
 			
-			local cmdStartLength = string.len(commandString)+2
+			local cmdStartLength = string.len(commandString)+1
 
 			if not value.IsConstant then
 
@@ -286,7 +286,7 @@ if CLIENT then
 			-- loop offset variables
 			local messageOffset = 0
 
-			-- loop messages of entity
+			-- loop entries
 			for key, value in pairs(sortedList) do 
 				-- animation calculation variables
 				local timeLeft = value.Disappear - CurTime()
@@ -333,7 +333,7 @@ if CLIENT then
 						local box_h = th + value.Display.BackgroundPaddingHeight
 						
 						-- radius variables
-						local radius = 10
+						local radius = 50
 						local b1 = true
 						local b2 = true
 						local b3 = true
