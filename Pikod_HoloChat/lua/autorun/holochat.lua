@@ -123,9 +123,22 @@ if SERVER then
 		net.Send(ply)
 	end
 
+	function PI_HOLO.split(inputstr, sep)
+	   
+	   if sep == nil then
+	      sep = "%s"
+	   end
+	   local t={}
+	   
+	   for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+	      table.insert(t, str)
+	   end
+
+	   return t
+
+	end
 
 	local function onCommand(ply, text, teamchat)
-		print(text)
 
 		if teamchat then return end
 		if not IsValid(ply) then return end -- player check
@@ -134,8 +147,9 @@ if SERVER then
 
 		for key, value in pairs(system.modules) do
 			
-			local commandString = system.properties["prefix"]..key.." "
-			if string.sub(text, 0, string.len(commandString)) ~= commandString then continue end -- continue to loop if command not matches
+			local commandString = system.properties["prefix"]..key
+			local splited = PI_HOLO.split(string.lower(text), " ")
+			if splited[1] ~= commandString:lower() then continue end -- continue to loop if command not matches
 
 			-- Command matches
 			if system.cooldowns[ply] and system.cooldowns[ply] > CurTime() then -- check is player in cooldown
