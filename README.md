@@ -8,6 +8,8 @@
 The GMOD HoloChat plugin is a role chat addon made to make roleplay more fun. With modifiable structure very useful addon is it. You can change each property very easily.
 </p>
 
+https://user-images.githubusercontent.com/46069238/187189781-572e606f-2814-4420-844e-3b9034b55cfc.mp4
+
 <h2>Installation</h2>
 
 * Download project
