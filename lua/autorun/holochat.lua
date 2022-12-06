@@ -8,6 +8,23 @@
 PI_HOLO = {}
 local system = PI_HOLO -- Creation of shortcut
 
+local notification = notification
+local FrameTime = FrameTime
+local IsValid = IsValid
+local CurTime = CurTime
+local surface = surface
+local string = string
+local Vector = Vector
+local Angle = Angle
+local Color = Color
+local table = table
+local pairs = pairs
+local hook = hook
+local draw = draw
+local Lerp = Lerp
+local cam = cam
+local net = net
+
 -- Log functions
 local log_side_color = Color(64, 203, 245)
 if CLIENT then 
@@ -123,7 +140,7 @@ if SERVER then
 		net.Send(ply)
 	end
 
-	function PI_HOLO.split(inputstr, sep)
+	function system.split(inputstr, sep)
 	   
 	   if sep == nil then
 	      sep = "%s"
@@ -148,7 +165,7 @@ if SERVER then
 		for key, value in pairs(system.modules) do
 			
 			local commandString = system.properties["prefix"]..key
-			local splited = PI_HOLO.split(string.lower(text), " ")
+			local splited = system.split(string.lower(text), " ")
 			if splited[1] ~= commandString:lower() then continue end -- continue to loop if command not matches
 
 			-- Command matches
