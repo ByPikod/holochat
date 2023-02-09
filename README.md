@@ -13,8 +13,8 @@ https://user-images.githubusercontent.com/46069238/187189781-572e606f-2814-4420-
 <h2>Installation</h2>
 
 * Download project
-* Drag pikod_holochat folder to in Addons folder.
+* Drag the project and move it to the addons.
 
 <h2>Configuration</h2>
 
-You can configure addon in **"pikod_holochat\lua\darkrp_modules\holochat\sh_config.lua"**
+You can configure addon from **"addon\lua\holo_config.lua"**
