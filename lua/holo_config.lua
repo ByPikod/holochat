@@ -11,7 +11,7 @@
 
 	 Thanks for using!
 ]]--
-
+local PI_HOLO = PI_HOLO
 PI_HOLO:ClearConfig()
 
 --[[
@@ -22,6 +22,7 @@ You can add command module (me, do, status etc.)
 PI_HOLO:AddModule("me", {
 	["DisplayLength"] = 5, -- Display length defines message how many seconds after will be disappear
 	["IsConstant"] = false, -- If is command constant it will not disappear until you use command again (Without parameters.)
+	["ConstantLimit"] = 0, -- How many constant message can be displayed at the same time ? (You don't need to touch if module isn't constant.)
 	["Display"] = {
 		["Font"] = "default", -- You can change this with your fonts after add your font with CreateFont function
 		["BackgroundPaddingWidth"] = 256, -- Space from right and left
@@ -63,6 +64,7 @@ PI_HOLO:AddModule("do", {
 PI_HOLO:AddModule("status", {
 	["DisplayLength"] = 5,
 	["IsConstant"] = true,
+	["ConstantLimit"] = 1,
 	["Display"] = {
 		["Font"] = "default",
 		["BackgroundPaddingWidth"] = 256,

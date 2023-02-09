@@ -13,6 +13,8 @@ local FrameTime = FrameTime
 local IsValid = IsValid
 local CurTime = CurTime
 local surface = surface
+local CLIENT = CLIENT
+local SERVER = SERVER
 local string = string
 local Vector = Vector
 local Angle = Angle
@@ -22,29 +24,40 @@ local pairs = pairs
 local hook = hook
 local draw = draw
 local Lerp = Lerp
+local MsgC = MsgC
 local cam = cam
 local net = net
 
 -- Log functions
 local log_side_color = Color(64, 203, 245)
+
 if CLIENT then 
+
 	log_side_color = Color(252, 223, 3)
+
 end
 
 function system:Info(msg)
+
 	MsgC( Color( 78, 230, 93 ), "HoloChat (Info) > ", log_side_color, msg.."\n" )
+
 end
 
 function system:Warn(msg)
+
 	MsgC( Color( 227, 45, 61 ), "HoloChat (Warn) > ", log_side_color, msg.."\n" )
+
 end
 
 function system:Error(msg)
+
 	error("HoloChat Error -> "..msg, 1)
+
 end
 
 -- Configuration functions
 function system:AddModule(command, module)
+
 	-- Check required params
 	if not command then self:Error("Undefined module command name", 1) end
 	if string.len(command) > 32 then self:Error("Very long command name (max 32).") end
@@ -56,6 +69,7 @@ function system:AddModule(command, module)
 	-- Optional params
 	module.DisplayLength = (module.DisplayLength or 5) -- seconds
 	module.IsConstant = (module.IsConstant or false)
+	module.ConstantLimit = (module.ConstantLimit or 0)
 	
 	-- Display settings
 	module.Display = (module.Display or {})
@@ -73,28 +87,37 @@ function system:AddModule(command, module)
 
 	-- Insertion
 	self.modules[command] = module
+
 end
 
 -- Properties, settings etc.
 function system:SetProperty(key, value)
+	
 	self.properties[key] = value
+
 end
 
 -- Translate language
 function system:SetWord(key, value)
+
 	self.language[key] = value
+	
 end
 
 function system:CreateFont(name, family)
+
 	if SERVER then return end
+
 	surface.CreateFont("pi_holo:"..name, {
 		font = family,
 		extended = true,
 		size = 256
 	})
+
 end
 
 function system:ClearConfig()
+
 	-- Default modules
 	self.modules = {}
 	-- self:AddModule("me", {})
@@ -111,6 +134,7 @@ function system:ClearConfig()
 
 	-- Default font
 	self:CreateFont("default", "Arial")
+
 end
 
 system:ClearConfig() -- Load default properties
@@ -118,6 +142,7 @@ system:ClearConfig() -- Load default properties
 
 -- Server side
 if SERVER then
+
 	-- Variables
 	system.cooldowns = {}
 
@@ -132,12 +157,15 @@ if SERVER then
 
 	-- Functions
 	function system:SendNotify(ply, type, message, length)
+		
 		length = (length or 3)
+		
 		net.Start("pi_holo:notification")
 			net.WriteInt(type, 4)
 			net.WriteString(message)
 			net.WriteInt(length, 5)
 		net.Send(ply)
+
 	end
 
 	function system.split(inputstr, sep)
@@ -183,8 +211,10 @@ if SERVER then
 			if not value.IsConstant then
 
 				if string.len(text) <= cmdStartLength then
+					
 					system:SendNotify(ply, 1, system.language["parameter_error"], 3)
 					return ""
+
 				end
 
 				local message = string.sub(text, cmdStartLength) 
@@ -206,6 +236,7 @@ if SERVER then
 				else
 
 					local message = string.sub(text, cmdStartLength) 
+
 					net.Start("pi_holo:holo_message_broadcast")
 						net.WriteString(key)
 						net.WriteEntity(ply) -- who use command
@@ -217,7 +248,9 @@ if SERVER then
 			end
 
 			return "" -- remove chat message
+
 		end
+
 	end
 
 	-- Hooks
@@ -226,6 +259,7 @@ end
 
 -- Client side
 if CLIENT then
+
 	include("holo_config.lua")
 	system.holoList = {}
 	system.fonts = {}
@@ -248,9 +282,7 @@ if CLIENT then
 		if not IsValid(entity) then return end
 
 		local module = system.modules[command]
-
-		system.holoList[entity] = (system.holoList[entity] or {})
-		table.insert(system.holoList[entity], {
+		local messageTable = {
 			["Appear"] = CurTime(),
 			["Disappear"] = (CurTime() + module.DisplayLength),
 			["TimeForAnimation"] = module.TimeForAnimation,
@@ -259,7 +291,45 @@ if CLIENT then
 			["IsConstant"] = module.IsConstant,
 			["Message"] = message,
 			["Command"] = command
-		})
+		}
+		
+		-- init entity table if doesn't exists
+		system.holoList[entity] = (system.holoList[entity] or {})
+
+		-- This block prevents constant modules to display infinite messages.
+		if module.IsConstant then
+			
+			-- If the "constant message" limit has been exceeded
+			-- The "oldest message" will be changed with the new message.
+			
+			-- This "for block" finds "how many constant message there is" and the "oldest message".
+			local constantMessages, oldestMessage = 0, nil
+			for k, v in ipairs( system.holoList[entity] ) do
+				
+				if v.Command ~= command then return end
+				
+				-- find oldest message
+				if not oldestMessage or v.Appear < oldestMessage[2].Appear then
+					-- The value is needed for this block and the key is needed for the change operation below.
+					oldestMessage = {k, v}
+				end
+
+				-- constant message counter
+				constantMessages = constantMessages + 1 
+
+			end
+
+			-- if the limit is exceeded
+			if constantMessages >= module.ConstantLimit then
+				system.holoList[entity][oldestMessage[1]] = messageTable
+				return
+			end
+
+		end
+
+		-- message is not constant or limit is not exceeded
+		system.holoList[entity] = (system.holoList[entity] or {})
+		table.insert(system.holoList[entity], messageTable)
 
 	end)
 
@@ -270,21 +340,27 @@ if CLIENT then
 		if not IsValid(entity) then return end
 
 		for k,v in pairs(system.holoList) do
+
 			if not (k == entity) then continue end
+
 			for k1,v1 in pairs(v) do
+
 				if v1.Command == command then
 
 					v1.IsConstant = false
 
 					if v1.TimeForAnimation["fadeOut"] > v1.TimeForAnimation["slideOut"] then
 						v1.Disappear = CurTime() + v1.TimeForAnimation["fadeOut"]
-					else
-						v1.Disappear = CurTime() + v1.TimeForAnimation["slideOut"]
+					else 
+						v1.Disappear = CurTime() + v1.TimeForAnimation["slideOut"] 
 					end
+
 					return
 
 				end
+
 			end
+
 		end
 
 	end)
@@ -294,6 +370,7 @@ if CLIENT then
 
 	-- Draw function
 	local function DrawHolo()
+		
 		local ang = LocalPlayer():EyeAngles()
 
 		ang:RotateAroundAxis( ang:Forward(), 90 )
@@ -319,6 +396,7 @@ if CLIENT then
 
 			-- loop entries
 			for key, value in pairs(sortedList) do 
+
 				-- animation calculation variables
 				local timeLeft = value.Disappear - CurTime()
 				local timePassed = (value.DisplayLength - timeLeft)
@@ -411,10 +489,12 @@ if CLIENT then
 			end
 
 		end
+
 	end
 
 	-- Hooks
 	hook.Add("PostDrawOpaqueRenderables", "drawMeChat", DrawHolo)
+
 end
 
 system:Info("Enabled")
